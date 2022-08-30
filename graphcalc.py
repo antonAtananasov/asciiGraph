@@ -59,10 +59,10 @@ class Framebuffer():
             for pixel in row:
                 print(str(pixel)[0], end='')
 
-    def plot(self):
+    def plot(self, eq):
         for row in range(self.sizeY):
             for col in range(self.sizeX):
-                eq = '((1/4*y)^2+(1/4*x)^2-1)^3-(1/4*x)^2*(1/4*y)^3'
+                # eq = '((1/4*y)^2+(1/4*x)^2-1)^3-(1/4*x)^2*(1/4*y)^3'
                 eq = eq.replace('x','self.coordsX[col]').replace('y','self.coordsY[row]').replace('^','**')
                 val=eval(eq)
                 if row == 0 or col == 0:
@@ -74,7 +74,9 @@ class Framebuffer():
 
 if __name__ == '__main__':
     plot = Framebuffer()
-    plot.drawAxes()
-    plot.plot()
-    plot.render()
+    while 1:
+        plot.drawAxes()
+        eq = input('Equation: ')
+        plot.plot(eq)
+        plot.render()
 
