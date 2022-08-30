@@ -1,7 +1,9 @@
-from cmath import pi
+from math import *
 import numpy as np
 import os
 
+def sign(a):
+    return 1 if a>=0 else -1
 
 def map(value, leftMin, leftMax, rightMin, rightMax):
     # Figure out how 'wide' each range is
@@ -28,38 +30,39 @@ class Framebuffer():
         #set size
         self.sizeX = sizeX
         self.sizeY = sizeY
-        self.aspectRatio = ratio = sizeY/sizeX
+        self.aspectRatio = ratio = sizeY/sizeX*17/7
         #set coordinate range
         self.rangeX = np.array([-10,10])
-        self.rangeY = self.rangeX*ratio
+        self.rangeY = -self.rangeX*ratio
         #create coordinate matrices
         self.coordsX =  np.linspace(self.rangeX[0], self.rangeX[1],sizeX)
         self.coordsY =  np.linspace(self.rangeY[0], self.rangeY[1],sizeY)
         self.coords = np.zeros((winY,winX))  #array with numerical coords 
 
         self.framebuffer = np.full(self.coords.shape,' ') #array with pixels
+        self.charMap = {' ':' ', '<':'<', '>':'>', '_':'─','^':'˄','v':'˅','|':'│','+':'┼','.':'¤'}
 
 
     def drawAxes(self):
         for i in range(self.sizeY):
             for j in range(self.sizeX):
                 c = ' '
-                if i == self.sizeY//2:
+                if i == round(self.sizeY/2):
                     if j == 0:
-                        c = '<'
+                        c = self.charMap['<']
                     elif j == self.sizeX-1:
-                        c = '>'
+                        c = self.charMap['>']
                     else:
-                        c = '─'
-                if j == self.sizeX//2:
+                        c = self.charMap['_']
+                if j == round(self.sizeX/2):
                     if i == 0:
-                        c = '^'
+                        c = self.charMap['^']
                     elif i == self.sizeY-1:
-                        c = 'v'
+                        c = self.charMap['v']
                     else:
-                        c='│'
-                if j == self.sizeX//2 and i == self.sizeY//2:
-                    c='┼'
+                        c = self.charMap['|']
+                if j == round((self.sizeX)/2) and i == round((self.sizeY)/2):
+                    c = self.charMap['+']
                 self.framebuffer[i][j] = c
 
 
@@ -68,11 +71,25 @@ class Framebuffer():
             for pixel in row:
                 print(str(pixel)[0], end='')
 
+    def plot(self):
+        for row in range(self.sizeY):
+            for col in range(self.sizeX):
+                eq = 'y-tan(x)' #((1/4*y)^2+(1/4*x)^2-1)^3-(1/4*x)^2*(1/4*y)^3
+                eq = eq.replace('x','self.coordsX[col]').replace('y','self.coordsY[row]').replace('^','**')
+                val=eval(eq)
+                if row == 0 or col == 0:
+                    sgneq=sign(val)
+                if sign(val) != sgneq:
+                    self.framebuffer[row][col] = self.charMap['.'] 
+                    sgneq=sign(val)               
+                
+
 
 
 
 if __name__ == '__main__':
     plot = Framebuffer()
     plot.drawAxes()
+    plot.plot()
     plot.render()
 
