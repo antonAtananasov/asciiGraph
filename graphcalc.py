@@ -5,18 +5,6 @@ import os
 def sign(a):
     return 1 if a>=0 else -1
 
-def map(value, leftMin, leftMax, rightMin, rightMax):
-    # Figure out how 'wide' each range is
-    leftSpan = leftMax - leftMin
-    rightSpan = rightMax - rightMin
-
-    # Convert the left range into a 0-1 range (float)
-    valueScaled = float(value - leftMin) / float(leftSpan)
-
-    # Convert the 0-1 range into a value in the right range.
-    return rightMin + (valueScaled * rightSpan)
-
-
 class Framebuffer():
     def __init__(self, sizeX=-1, sizeY=-1):
         #detect screen size
@@ -74,7 +62,7 @@ class Framebuffer():
     def plot(self):
         for row in range(self.sizeY):
             for col in range(self.sizeX):
-                eq = 'y-tan(x)' #((1/4*y)^2+(1/4*x)^2-1)^3-(1/4*x)^2*(1/4*y)^3
+                eq = '((1/4*y)^2+(1/4*x)^2-1)^3-(1/4*x)^2*(1/4*y)^3'
                 eq = eq.replace('x','self.coordsX[col]').replace('y','self.coordsY[row]').replace('^','**')
                 val=eval(eq)
                 if row == 0 or col == 0:
@@ -82,10 +70,7 @@ class Framebuffer():
                 if sign(val) != sgneq:
                     self.framebuffer[row][col] = self.charMap['.'] 
                     sgneq=sign(val)               
-                
-
-
-
+            
 
 if __name__ == '__main__':
     plot = Framebuffer()
