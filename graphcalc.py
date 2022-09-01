@@ -2,6 +2,35 @@ import numpy as np
 import os
 from numpy import sqrt, sin, cos, tan, sign, abs
 
+def reverseDict(d):
+    return dict([(val,key) for key,val in list(d.items())])
+
+class SquareMap():
+    def __init__(self):
+        self.boundary = {'[[1, -1], [-1, -1]]':'/', 
+                        '[[-1, 1], [-1, -1]]':'\\',
+                        '[[-1, -1], [1, -1]]':'\\',
+                        '[[-1, -1], [-1, 1]]':'/',
+                        '[[1, 1], [-1, -1]]':'─',
+                        '[[-1, -1], [1, 1]]':'─',
+                        '[[1, -1], [1, -1]]':'│',
+                        '[[-1, 1], [-1, 1]]':'│',
+                        '[[1, -1], [-1, 1]]':'╲',
+                        '[[-1, 1], [1, -1]]':'╱',
+                        '[[-1, 1], [1, 1]]':'/',
+                        '[[1, -1], [1, 1]]':'\\',
+                        '[[1, 1], [-1, 1]]':'\\',
+                        '[[1, 1], [1, -1]]':'/'}
+
+        self.fillin = { '[[1, 1], [1, 1]]':'▓',
+                        '[[0, 0], [0, 0]]': ' ' }
+
+        self.fillout = {'[[-1, -1], [-1, -1]]':'░'}
+
+        self.all = {}
+        self.all.update(self.boundary)
+        self.all.update(self.fillin)
+        self.all.update(self.fillout)
 
 class Framebuffer():
     def __init__(self, sizeX=-1, sizeY=-1):
@@ -13,24 +42,12 @@ class Framebuffer():
         self.antialiasing = 2
         self.charMap = {' ': ' ', '<': '<', '>': '>', '_': '─',
                         '^': '˄', 'v': '˅', '|': '│', '+': '┼',
-                        '.': '¤', '>=':'≥','<=':'≥','!=':'≠'}
+                        '.': '¤'}
+        self.symbols = { '*':'*','^':'**','+':'+','-':'-','/':'/',')':')'}
+        self.modes = {'=':'=','>':'>','<':'<','>=':'≥','<=':'≤','!=':'≠'}
+        self.symbols.update(self.modes)
 
-        self.squareStates = {'[[-1, -1], [-1, -1]]':'░',
-                        '[[1, -1], [-1, -1]]':'/',
-                        '[[-1, 1], [-1, -1]]':'\\',
-                        '[[-1, -1], [1, -1]]':'\\',
-                        '[[-1, -1], [-1, 1]]':'/',
-                        '[[1, 1], [-1, -1]]':'-',
-                        '[[-1, -1], [1, 1]]':'-',
-                        '[[1, -1], [1, -1]]':'|',
-                        '[[-1, 1], [-1, 1]]':'|',
-                        '[[1, -1], [-1, 1]]':'\\',
-                        '[[-1, 1], [1, -1]]':'/',
-                        '[[-1, 1], [1, 1]]':'/',
-                        '[[1, -1], [1, 1]]':'\\',
-                        '[[1, 1], [-1, 1]]':'\\',
-                        '[[1, 1], [1, -1]]':'/',
-                        '[[1, 1], [1, 1]]':'▓'}
+        self.squareStates = SquareMap()
 
     def setSize(self, sizeX=-1, sizeY=-1):
         # detect screen size
@@ -53,26 +70,28 @@ class Framebuffer():
 
         
     def drawAxes(self):
-        for i in range(self.sizeY):
-            for j in range(self.sizeX):
-                c = ' '
-                if i == round(self.sizeY/2):
-                    if j == 0:
-                        c = self.charMap['<']
-                    elif j == self.sizeX-1:
-                        c = self.charMap['>']
-                    else:
-                        c = self.charMap['_']
-                if j == round(self.sizeX/2):
-                    if i == 0:
-                        c = self.charMap['^']
-                    elif i == self.sizeY-1:
-                        c = self.charMap['v']
-                    else:
-                        c = self.charMap['|']
-                if j == round((self.sizeX)/2) and i == round((self.sizeY)/2):
-                    c = self.charMap['+']
-                self.framebuffer[i][j] = c
+        # for i in range(self.sizeY):
+        #     for j in range(self.sizeX):
+        #         c = ' '
+        #         if i == round(self.sizeY/2):
+        #             if j == 0:
+        #                 c = self.charMap['<']
+        #             elif j == self.sizeX-1:
+        #                 c = self.charMap['>']
+        #             else:
+        #                 c = self.charMap['_']
+        #         if j == round(self.sizeX/2):
+        #             if i == 0:
+        #                 c = self.charMap['^']
+        #             elif i == self.sizeY-1:
+        #                 c = self.charMap['v']
+        #             else:
+        #                 c = self.charMap['|']
+        #         if j == round((self.sizeX)/2) and i == round((self.sizeY)/2):
+        #             c = self.charMap['+']
+        #         self.framebuffer[i][j] = c
+
+        pass
 
     def render(self):
         for row in self.framebuffer:
@@ -80,10 +99,11 @@ class Framebuffer():
                 print(str(pixel)[0], end='')
 
     def parseEquation(self, equationString):
-        # convert carrets to exponent powers
-        equationString = equationString.replace('^', '**')
-        # convert <= and >= to signgle cahrs for check
-        equationString = equationString.replace('<=',self.charMap['<=']).replace('>=',self.charMap['>=']).replace('!=',self.charMap['!='])
+        # convert <= and >= to single cahrs for check
+        for key, val in self.symbols.items():
+            equationString = equationString.replace(key,val)
+
+                    
         #reorder equation
         mode = self.equationMode(equationString)
         if mode in equationString:
@@ -92,21 +112,38 @@ class Framebuffer():
             left, right = equationString, '0'
         equationString = left + '-(' + right + ')'+mode+'0'
                     
+        # add multiplications
+        i = 0
+        while True:
+            if i < len(equationString)-1:
+                char = equationString[i]
+                nextChar = equationString[i+1]
+                if char.isdigit() and not nextChar.isdigit() and not nextChar in self.symbols:
+                    equationString = equationString[:i+1] + '*' + equationString[i+1:]
+                i += 1
+            else:
+                break
+
         return equationString
 
     def equationMode(self, equationString): # return 'equaton (=, !=)' or 'inequality (>, <, >=, <=)'
         mode = ''
-        for char in ['=','>','<', self.charMap['<='], self.charMap['>='], self.charMap['!=']]:
-            if char in equationString:
-                mode=char
+        for key, val in self.modes.items():
+            if val in equationString:
+                mode=val
+                break
+            elif key in equationString:
+                mode = key
                 break
         return mode if mode != '' else '='
 
     def plot(self, equationString):
         eq = self.parseEquation(equationString)
         mode = self.equationMode(eq)
+        asciiMode = reverseDict(self.modes)[mode]
         if mode in eq:
             eq = eq.split(mode)[0]
+        print(eq)
         # create coordinate matrices
         self.coordsX = np.array([np.linspace(self.rangeX[0], self.rangeX[1], self.sizeX * self.antialiasing)]).repeat(self.sizeY * self.antialiasing , axis=0)
         self.coordsY = np.array([np.linspace(self.rangeY[1], self.rangeY[0], self.sizeY * self.antialiasing)]).transpose().repeat(self.sizeX * self.antialiasing, axis=1)
@@ -119,11 +156,14 @@ class Framebuffer():
                 i=row*2
                 j=col*2
                 square=str(np.sign(self.coords[i:i+2, j:j+2]).astype(int).tolist())
-                pixel = self.squareStates[square]
-                if pixel != ' ':
-                    if (mode == '=' and not pixel in ['░','▓']) or (mode == self.charMap['!='] and pixel in ['░','▓']) or (mode == '>' and pixel != '░') or (mode == '<' and pixel != '▓') :
-                        self.framebuffer[row][col] = pixel
+                pixel = self.squareStates.all[square]
 
+                equiationPixel = asciiMode in ['=', '>=', '<='] and square in self.squareStates.boundary
+                inequalityPixel = asciiMode in ['<','!=','<='] and square in self.squareStates.fillout
+                inequationPixel = asciiMode in ['>','!=','>='] and square in self.squareStates.fillin
+                if not pixel in [' ', '']:
+                    if equiationPixel or inequalityPixel or inequationPixel:
+                        self.framebuffer[row][col] = pixel
 
 if __name__ == '__main__':
     plot = Framebuffer()
