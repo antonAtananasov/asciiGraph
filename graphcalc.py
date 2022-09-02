@@ -36,8 +36,8 @@ class Framebuffer():
     def __init__(self, sizeX=-1, sizeY=-1):
         #
         self.setSize(sizeX=-1, sizeY=-1)
-        self.rangeX = np.array([-10,10])
-        self.rangeY = self.rangeX * self.aspectRatio
+        self.setRange(-10,-10,10,10)
+        self.fixAspectRatio()
         #
         self.antialiasing = 2
         self.charMap = {' ': ' ', '<': '<', '>': '>', '_': '─',
@@ -65,8 +65,15 @@ class Framebuffer():
 
         self.framebuffer = np.full((self.sizeY, self.sizeX), ' ')  # array with 
 
-    def fixResize(self):
-        self.rangeY = self.rangeX * self.aspectRatio
+    def setRange(self, minX, minY, maxX, maxY):
+        self.rangeX = np.array([minX,maxX])
+        self.rangeY = np.array([minY,maxY])
+
+    def fixAspectRatio(self, axis=1):
+        if axis == 1:
+            self.rangeY = self.rangeX * self.aspectRatio
+        elif axis == 0:
+            self.rangeX = self.rangeY / self.aspectRatio
 
         
     def drawAxes(self):
@@ -145,8 +152,8 @@ class Framebuffer():
             eq = eq.split(mode)[0]
         print(eq)
         # create coordinate matrices
-        self.coordsX = np.array([np.linspace(self.rangeX[0], self.rangeX[1], self.sizeX * self.antialiasing)]).repeat(self.sizeY * self.antialiasing , axis=0)
-        self.coordsY = np.array([np.linspace(self.rangeY[1], self.rangeY[0], self.sizeY * self.antialiasing)]).transpose().repeat(self.sizeX * self.antialiasing, axis=1)
+        self.coordsX = np.array([np.linspace(self.rangeX[0], self.rangeX[1], self.sizeX * self.antialiasing)], dtype='complex128').repeat(self.sizeY * self.antialiasing , axis=0)
+        self.coordsY = np.array([np.linspace(self.rangeY[1], self.rangeY[0], self.sizeY * self.antialiasing)], dtype='complex128').transpose().repeat(self.sizeX * self.antialiasing, axis=1)
         
         self.coords = eval(eq.replace('x','self.coordsX').replace('y','self.coordsY'))  # array with numerical coords
 
@@ -173,7 +180,8 @@ if __name__ == '__main__':
             break
         # print(plot.parseEquation(eq))
         plot.setSize()
-        plot.fixResize()
+        plot.setRange(-4,-4,4,4)
+        plot.fixAspectRatio()
         plot.drawAxes()
         plot.plot(eq)
         plot.render()
