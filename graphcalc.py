@@ -39,7 +39,7 @@ class Framebuffer():
         self.setRange(-10,-10,10,10)
         self.fixAspectRatio()
         #
-        self.antialiasing = 2
+        # self.antialiasing = 2
         self.charMap = {' ': ' ', '<': '<', '>': '>', '_': '─',
                         '^': '˄', 'v': '˅', '|': '│', '+': '┼',
                         '.': '¤'}
@@ -97,7 +97,8 @@ class Framebuffer():
         #         if j == round((self.sizeX)/2) and i == round((self.sizeY)/2):
         #             c = self.charMap['+']
         #         self.framebuffer[i][j] = c
-
+        self.plot('y=0')
+        self.plot('x=0')
         pass
 
     def render(self):
@@ -150,20 +151,19 @@ class Framebuffer():
         asciiMode = reverseDict(self.modes)[mode]
         if mode in eq:
             eq = eq.split(mode)[0]
-        print(eq)
         # create coordinate matrices
-        self.coordsX = np.array([np.linspace(self.rangeX[0], self.rangeX[1], self.sizeX * self.antialiasing)], dtype='complex128').repeat(self.sizeY * self.antialiasing , axis=0)
-        self.coordsY = np.array([np.linspace(self.rangeY[1], self.rangeY[0], self.sizeY * self.antialiasing)], dtype='complex128').transpose().repeat(self.sizeX * self.antialiasing, axis=1)
+        self.coordsX = np.array([np.linspace(self.rangeX[0], self.rangeX[1], self.sizeX + 1)], dtype='complex128').repeat(self.sizeY + 1 , axis=0)
+        self.coordsY = np.array([np.linspace(self.rangeY[1], self.rangeY[0], self.sizeY + 1)], dtype='complex128').transpose().repeat(self.sizeX + 1, axis=1)
         
         self.coords = eval(eq.replace('x','self.coordsX').replace('y','self.coordsY'))  # array with numerical coords
 
         #march squares
         for row in range(self.sizeY):
             for col in range(self.sizeX):
-                i=row*2
-                j=col*2
-                square=str(np.sign(self.coords[i:i+2, j:j+2]).astype(int).tolist())
-                pixel = self.squareStates.all[square]
+                square=str(np.sign(self.coords[row:row+2, col:col+2]).astype(int).tolist())
+                pixel = ' '
+                if square in self.squareStates.all:
+                    pixel = self.squareStates.all[square]
 
                 equiationPixel = asciiMode in ['=', '>=', '<='] and square in self.squareStates.boundary
                 inequalityPixel = asciiMode in ['<','!=','<='] and square in self.squareStates.fillout
@@ -178,7 +178,7 @@ if __name__ == '__main__':
         eq = input('Equation: ')
         if len(eq)<1:
             break
-        # print(plot.parseEquation(eq))
+
         plot.setSize()
         plot.setRange(-4,-4,4,4)
         plot.fixAspectRatio()
