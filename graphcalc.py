@@ -1,5 +1,5 @@
 import numpy as np
-import os
+import os, sys
 from numpy import sqrt, sin, cos, tan, sign, abs, sinh, cosh, tanh,log,log10, exp, log2, arcsin, arccos,arctan, degrees, radians, arcsinh, arccosh, arctanh, sinc
 import random
 
@@ -82,7 +82,7 @@ class Framebuffer():
         #basic character substitution to use keyboard easier
         self.charMap = {' ': ' ', '<': '<', '>': '>', '_': '─',
                         '^': '˄', 'v': '˅', '|': '│', '+': '┼',
-                        '.': '¤'}
+                        '.': '·'}
         #for parsing equations
         self.symbols = { '*':'*','^':'**','+':'+','-':'-','/':'/',')':')'}
         #evaluation modes
@@ -168,6 +168,14 @@ class Framebuffer():
                 mode = key
                 break
         return mode if mode != '' else '='
+    
+    # def point(self, pointString, fill='·'):
+    #     pointString = self.parseEquation(pointString).replace('(','[').replace(')',']')
+        
+    #     coordsX = np.array([np.linspace(self.rangeX[0], self.rangeX[1], self.sizeX)], dtype='complex_').repeat(self.sizeY + 1 , axis=0)
+    #     coordsY = np.array([np.linspace(self.rangeY[1], self.rangeY[0], self.sizeY)], dtype='complex_').transpose().repeat(self.sizeX + 1, axis=1)
+    #     coords = np.array(zip(coordsX,coordsY))-np.array(eval(pointstring)) # array with numerical coords
+        
 
     def plot(self, equationString, fill=''):
         eq = self.parseEquation(equationString)
@@ -176,17 +184,17 @@ class Framebuffer():
         if mode in eq:
             eq = eq.split(mode)[0]
         # create coordinate matrices
-        self.coordsX = np.array([np.linspace(self.rangeX[0], self.rangeX[1], self.sizeX + 1)], dtype='complex_').repeat(self.sizeY + 1 , axis=0)
-        self.coordsY = np.array([np.linspace(self.rangeY[1], self.rangeY[0], self.sizeY + 1)], dtype='complex_').transpose().repeat(self.sizeX + 1, axis=1)
+        coordsX = np.array([np.linspace(self.rangeX[0], self.rangeX[1], self.sizeX + 1)], dtype='complex_').repeat(self.sizeY + 1 , axis=0)
+        coordsY = np.array([np.linspace(self.rangeY[1], self.rangeY[0], self.sizeY + 1)], dtype='complex_').transpose().repeat(self.sizeX + 1, axis=1)
         
-        self.coords = eval(eq.replace('x','self.coordsX').replace('y','self.coordsY'))  # array with numerical coords
+        coords = eval(eq.replace('x','coordsX').replace('y','coordsY'))  # array with numerical coords
 
         #update character set
         self.squareStates.setCharmapVariant(self.charmapVariant)
         #march squares
         for row in range(self.sizeY):
             for col in range(self.sizeX):
-                submatrix = self.coords[row:row+2, col:col+2]
+                submatrix = coords[row:row+2, col:col+2]
                 #get sign of dots (elements) in submatrix 
                 square=str(np.sign(submatrix).real.astype(int).tolist())
                 pixel = ' '
@@ -206,8 +214,17 @@ class Framebuffer():
                     if equiationPixel or inequalityPixel or inequationPixel:
                         self.framebuffer[row][col] = pixel if fill in ['', ' '] else fill
 
+#=============================================================================================================================================================
 
-
+w,h=os.get_terminal_size()
+resize = True
+if len(sys.argv) >= 3:
+    w=int(str(sys.argv[1]))
+    h=int(str(sys.argv[2]))
+if len(sys.argv) == 4:
+    resize=int(str(sys.argv[3]))
+    print(resize)
+    
 
 if __name__ == '__main__':
     plot = Framebuffer()
@@ -216,9 +233,9 @@ if __name__ == '__main__':
         if len(eq)<1:
             break
 
-        plot.setSize()
+        plot.setSize() if resize else plot.setSize(w,h)
         plot.setRange(-4,-4,4,4)
         plot.fixAspectRatio()
         plot.drawAxes()
-        plot.plot(eq,'·')
+        plot.plot(eq,plot.charMap['.'])
         plot.render()
