@@ -1,31 +1,65 @@
 import numpy as np
 import os
-from numpy import sqrt, sin, cos, tan, sign, abs
+from numpy import sqrt, sin, cos, tan, sign, abs, sinh, cosh, tanh,log,log10, exp, log2, arcsin, arccos,arctan, degrees, radians, arcsinh, arccosh, arctanh, sinc
+import random
+
+def cot(a):
+    return 1/tan(a)
+def ctg(a):
+    return cot(a)
+def cotg(a):
+    return cot(a)
+def tg(a):
+    return tan(a)
+def sec(a):
+    return 1/cos(a)
+def csc(a):
+    return 1/sin(a)
 
 def reverseDict(d):
     return dict([(val,key) for key,val in list(d.items())])
+def selectDictVariant(d,variant):
+    return dict([(key,val[variant] if variant < len(val) else '�') for key,val in list(d.items())])
 
 class SquareMap():
-    def __init__(self):
-        self.boundary = {'[[1, -1], [-1, -1]]':'/', 
-                        '[[-1, 1], [-1, -1]]':'\\',
-                        '[[-1, -1], [1, -1]]':'\\',
-                        '[[-1, -1], [-1, 1]]':'/',
-                        '[[1, 1], [-1, -1]]':'─',
-                        '[[-1, -1], [1, 1]]':'─',
-                        '[[1, -1], [1, -1]]':'│',
-                        '[[-1, 1], [-1, 1]]':'│',
-                        '[[1, -1], [-1, 1]]':'╲',
-                        '[[-1, 1], [1, -1]]':'╱',
-                        '[[-1, 1], [1, 1]]':'/',
-                        '[[1, -1], [1, 1]]':'\\',
-                        '[[1, 1], [-1, 1]]':'\\',
-                        '[[1, 1], [1, -1]]':'/'}
+    def __init__(self, charmapVariant=0):
+        self.charmapBoundaryVariants = {
+            '[[1, -1], [-1, -1]]':['/','▘','╯'], 
+            '[[-1, 1], [-1, -1]]':['\\','▝','╰'],
+            '[[-1, -1], [1, -1]]':['\\','▖','╮'],
+            '[[-1, -1], [-1, 1]]':['/','▗','╭'],
+            '[[1, 1], [-1, -1]]':['─','▀','─'],
+            '[[-1, -1], [1, 1]]':['─','▄','─'],
+            '[[1, -1], [1, -1]]':['│','▌','│'],
+            '[[-1, 1], [-1, 1]]':['│','▐','│'],
+            '[[1, -1], [-1, 1]]':['╲','▚','╲'],
+            '[[-1, 1], [1, -1]]':['╱','▞','╱'],
+            '[[-1, 1], [1, 1]]':['/','▟','┘'],
+            '[[1, -1], [1, 1]]':['\\','▙','└'],
+            '[[1, 1], [-1, 1]]':['\\','▜','┐'],
+            '[[1, 1], [1, -1]]':['/','▛','┌']                
+            }
+        self.charmapFillinVariants = { 
+            '[[1, 1], [1, 1]]':['▓','▓'],
+            '[[0, 0], [0, 0]]': [' ',' '] 
+            }
+        self.charmapFilloutVariants = {
+            '[[-1, -1], [-1, -1]]':['░','░']
+            }
 
-        self.fillin = { '[[1, 1], [1, 1]]':'▓',
-                        '[[0, 0], [0, 0]]': ' ' }
+        self.allVariants={}
+        self.allVariants.update(self.charmapBoundaryVariants)
+        self.allVariants.update(self.charmapFillinVariants)
+        self.allVariants.update(self.charmapFilloutVariants)
 
-        self.fillout = {'[[-1, -1], [-1, -1]]':'░'}
+        self.setCharmapVariant(charmapVariant)
+
+        self.variantCount = np.max([len(val) for key,val in self.allVariants.items()])
+
+    def setCharmapVariant(self, charmapVariant):
+        self.boundary = selectDictVariant(self.charmapBoundaryVariants, charmapVariant)
+        self.fillin = selectDictVariant(self.charmapFillinVariants, charmapVariant)
+        self.fillout = selectDictVariant(self.charmapFilloutVariants, charmapVariant)
 
         self.all = {}
         self.all.update(self.boundary)
@@ -40,13 +74,13 @@ class Framebuffer():
         self.fixAspectRatio()
         #
         # self.antialiasing = 2
-        self.charMap = {' ': ' ', '<': '<', '>': '>', '_': '─',
-                        '^': '˄', 'v': '˅', '|': '│', '+': '┼',
-                        '.': '¤'}
+        # self.charMap = {' ': ' ', '<': '<', '>': '>', '_': '─',
+        #                 '^': '˄', 'v': '˅', '|': '│', '+': '┼',
+        #                 '.': '¤'}
         self.symbols = { '*':'*','^':'**','+':'+','-':'-','/':'/',')':')'}
         self.modes = {'=':'=','>':'>','<':'<','>=':'≥','<=':'≤','!=':'≠'}
         self.symbols.update(self.modes)
-
+        self.charmapVariant = 0
         self.squareStates = SquareMap()
 
     def setSize(self, sizeX=-1, sizeY=-1):
@@ -145,7 +179,7 @@ class Framebuffer():
                 break
         return mode if mode != '' else '='
 
-    def plot(self, equationString):
+    def plot(self, equationString, fill=''):
         eq = self.parseEquation(equationString)
         mode = self.equationMode(eq)
         asciiMode = reverseDict(self.modes)[mode]
@@ -158,6 +192,7 @@ class Framebuffer():
         self.coords = eval(eq.replace('x','self.coordsX').replace('y','self.coordsY'))  # array with numerical coords
 
         #march squares
+        self.squareStates.setCharmapVariant(self.charmapVariant)
         for row in range(self.sizeY):
             for col in range(self.sizeX):
                 square=str(np.sign(self.coords[row:row+2, col:col+2]).astype(int).tolist())
@@ -170,7 +205,7 @@ class Framebuffer():
                 inequationPixel = asciiMode in ['>','!=','>='] and square in self.squareStates.fillin
                 if not pixel in [' ', '']:
                     if equiationPixel or inequalityPixel or inequationPixel:
-                        self.framebuffer[row][col] = pixel
+                        self.framebuffer[row][col] = pixel if fill in ['', ' '] else fill
 
 if __name__ == '__main__':
     plot = Framebuffer()
