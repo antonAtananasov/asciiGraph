@@ -3,6 +3,7 @@ import os
 from numpy import sqrt, sin, cos, tan, sign, abs, sinh, cosh, tanh,log,log10, exp, log2, arcsin, arccos,arctan, degrees, radians, arcsinh, arccosh, arctanh, sinc
 import random
 
+#additional math functions
 def cot(a):
     return 1/tan(a)
 def ctg(a):
@@ -16,6 +17,7 @@ def sec(a):
 def csc(a):
     return 1/sin(a)
 
+#dictionary operations
 def reverseDict(d):
     return dict([(val,key) for key,val in list(d.items())])
 def selectDictVariant(d,variant):
@@ -23,6 +25,7 @@ def selectDictVariant(d,variant):
 
 class SquareMap():
     def __init__(self, charmapVariant=0):
+        #enumerate all character sets
         self.charmapBoundaryVariants = {
             '[[1, -1], [-1, -1]]':['/','▘','╯'], 
             '[[-1, 1], [-1, -1]]':['\\','▝','╰'],
@@ -47,15 +50,16 @@ class SquareMap():
             '[[-1, -1], [-1, -1]]':['░','░']
             }
 
+        #create group for checking valid marching square 
         self.allVariants={}
         self.allVariants.update(self.charmapBoundaryVariants)
         self.allVariants.update(self.charmapFillinVariants)
         self.allVariants.update(self.charmapFilloutVariants)
 
         self.setCharmapVariant(charmapVariant)
-
         self.variantCount = np.max([len(val) for key,val in self.allVariants.items()])
 
+    #select subset
     def setCharmapVariant(self, charmapVariant):
         self.boundary = selectDictVariant(self.charmapBoundaryVariants, charmapVariant)
         self.fillin = selectDictVariant(self.charmapFillinVariants, charmapVariant)
@@ -66,20 +70,25 @@ class SquareMap():
         self.all.update(self.fillin)
         self.all.update(self.fillout)
 
+
+
 class Framebuffer():
     def __init__(self, sizeX=-1, sizeY=-1):
-        #
+        #window/canvas setup
         self.setSize(sizeX=-1, sizeY=-1)
         self.setRange(-10,-10,10,10)
         self.fixAspectRatio()
-        #
-        # self.antialiasing = 2
-        # self.charMap = {' ': ' ', '<': '<', '>': '>', '_': '─',
-        #                 '^': '˄', 'v': '˅', '|': '│', '+': '┼',
-        #                 '.': '¤'}
+        
+        #basic character substitution to use keyboard easier
+        self.charMap = {' ': ' ', '<': '<', '>': '>', '_': '─',
+                        '^': '˄', 'v': '˅', '|': '│', '+': '┼',
+                        '.': '¤'}
+        #for parsing equations
         self.symbols = { '*':'*','^':'**','+':'+','-':'-','/':'/',')':')'}
-        self.modes = {'=':'=','>':'>','<':'<','>=':'≥','<=':'≤','!=':'≠'}
+        #evaluation modes
+        self.modes = {'=':'=','>':'>','<':'<','>=':'≥','<=':'≤','!=':'≠',',':','}
         self.symbols.update(self.modes)
+        #select graphical symbols
         self.charmapVariant = 0
         self.squareStates = SquareMap()
 
@@ -97,6 +106,7 @@ class Framebuffer():
         self.sizeY = sizeY
         self.aspectRatio = sizeY/sizeX*17/7
 
+        #prepare framebuffer
         self.framebuffer = np.full((self.sizeY, self.sizeX), ' ')  # array with 
 
     def setRange(self, minX, minY, maxX, maxY):
@@ -111,28 +121,8 @@ class Framebuffer():
 
         
     def drawAxes(self):
-        # for i in range(self.sizeY):
-        #     for j in range(self.sizeX):
-        #         c = ' '
-        #         if i == round(self.sizeY/2):
-        #             if j == 0:
-        #                 c = self.charMap['<']
-        #             elif j == self.sizeX-1:
-        #                 c = self.charMap['>']
-        #             else:
-        #                 c = self.charMap['_']
-        #         if j == round(self.sizeX/2):
-        #             if i == 0:
-        #                 c = self.charMap['^']
-        #             elif i == self.sizeY-1:
-        #                 c = self.charMap['v']
-        #             else:
-        #                 c = self.charMap['|']
-        #         if j == round((self.sizeX)/2) and i == round((self.sizeY)/2):
-        #             c = self.charMap['+']
-        #         self.framebuffer[i][j] = c
-        self.plot('y=0')
-        self.plot('x=0')
+        self.plot('y=0',self.charMap['_'])
+        self.plot('x=0',self.charMap['|'])
         pass
 
     def render(self):
@@ -160,7 +150,7 @@ class Framebuffer():
             if i < len(equationString)-1:
                 char = equationString[i]
                 nextChar = equationString[i+1]
-                if char.isdigit() and not nextChar.isdigit() and not nextChar in self.symbols:
+                if char.isdigit() and not nextChar.isdigit() and not nextChar in self.symbols and not nextChar in self.modes:
                     equationString = equationString[:i+1] + '*' + equationString[i+1:]
                 i += 1
             else:
@@ -186,26 +176,38 @@ class Framebuffer():
         if mode in eq:
             eq = eq.split(mode)[0]
         # create coordinate matrices
-        self.coordsX = np.array([np.linspace(self.rangeX[0], self.rangeX[1], self.sizeX + 1)], dtype='complex128').repeat(self.sizeY + 1 , axis=0)
-        self.coordsY = np.array([np.linspace(self.rangeY[1], self.rangeY[0], self.sizeY + 1)], dtype='complex128').transpose().repeat(self.sizeX + 1, axis=1)
+        self.coordsX = np.array([np.linspace(self.rangeX[0], self.rangeX[1], self.sizeX + 1)], dtype='complex_').repeat(self.sizeY + 1 , axis=0)
+        self.coordsY = np.array([np.linspace(self.rangeY[1], self.rangeY[0], self.sizeY + 1)], dtype='complex_').transpose().repeat(self.sizeX + 1, axis=1)
         
         self.coords = eval(eq.replace('x','self.coordsX').replace('y','self.coordsY'))  # array with numerical coords
 
-        #march squares
+        #update character set
         self.squareStates.setCharmapVariant(self.charmapVariant)
+        #march squares
         for row in range(self.sizeY):
             for col in range(self.sizeX):
-                square=str(np.sign(self.coords[row:row+2, col:col+2]).astype(int).tolist())
+                submatrix = self.coords[row:row+2, col:col+2]
+                #get sign of dots (elements) in submatrix 
+                square=str(np.sign(submatrix).real.astype(int).tolist())
                 pixel = ' '
+                #check if submatrix is valid
                 if square in self.squareStates.all:
                     pixel = self.squareStates.all[square]
-
+                
+                #chech type of equality and type of square
                 equiationPixel = asciiMode in ['=', '>=', '<='] and square in self.squareStates.boundary
                 inequalityPixel = asciiMode in ['<','!=','<='] and square in self.squareStates.fillout
                 inequationPixel = asciiMode in ['>','!=','>='] and square in self.squareStates.fillin
-                if not pixel in [' ', '']:
+                
+                #for reserved for checks in the future 
+                asymptote = False
+                
+                if not pixel in [' ', ''] and not asymptote:
                     if equiationPixel or inequalityPixel or inequationPixel:
                         self.framebuffer[row][col] = pixel if fill in ['', ' '] else fill
+
+
+
 
 if __name__ == '__main__':
     plot = Framebuffer()
@@ -218,5 +220,5 @@ if __name__ == '__main__':
         plot.setRange(-4,-4,4,4)
         plot.fixAspectRatio()
         plot.drawAxes()
-        plot.plot(eq)
+        plot.plot(eq,'·')
         plot.render()
