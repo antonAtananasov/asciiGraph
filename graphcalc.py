@@ -31,8 +31,8 @@ class SquareMap():
             '[[-1, 1], [-1, -1]]':['\\','▝','╰'],
             '[[-1, -1], [1, -1]]':['\\','▖','╮'],
             '[[-1, -1], [-1, 1]]':['/','▗','╭'],
-            '[[1, 1], [-1, -1]]':['─','▀','─'],
-            '[[-1, -1], [1, 1]]':['─','▄','─'],
+            '[[1, 1], [-1, -1]]':['-','▀','─'],
+            '[[-1, -1], [1, 1]]':['-','▄','─'],
             '[[1, -1], [1, -1]]':['│','▌','│'],
             '[[-1, 1], [-1, 1]]':['│','▐','│'],
             '[[1, -1], [-1, 1]]':['╲','▚','╲'],
@@ -97,6 +97,7 @@ class Framebuffer():
         if sizeX < 0 or sizeY < 0:
             winX, winY = os.get_terminal_size()
             winY -= 2
+            winX -= 1
             if sizeX < 0:
                 sizeX = winX
             if sizeY < 0:
@@ -107,7 +108,7 @@ class Framebuffer():
         self.aspectRatio = sizeY/sizeX*17/7
 
         #prepare framebuffer
-        self.framebuffer = np.full((self.sizeY, self.sizeX), ' ')  # array with 
+        self.framebuffer = np.full((self.sizeY, self.sizeX), ' ')  # array with ascii pixels
 
     def setRange(self, minX, minY, maxX, maxY):
         self.rangeX = np.array([minX,maxX])
@@ -129,6 +130,7 @@ class Framebuffer():
         for row in self.framebuffer:
             for pixel in row:
                 print(str(pixel)[0], end='')
+            print('')
 
     def parseEquation(self, equationString):
         # convert <= and >= to single cahrs for check
