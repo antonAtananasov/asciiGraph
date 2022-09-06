@@ -122,8 +122,8 @@ class Framebuffer():
 
         
     def drawAxes(self):
-        self.plot('y=0',self.charMap['_'])
-        self.plot('x=0',self.charMap['|'])
+        self.plot('y=0','-')
+        self.plot('x=0','|')
         pass
 
     def render(self):
