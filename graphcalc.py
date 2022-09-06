@@ -33,8 +33,8 @@ class SquareMap():
             '[[-1, -1], [-1, 1]]':['/','▗','╭'],
             '[[1, 1], [-1, -1]]':['-','▀','─'],
             '[[-1, -1], [1, 1]]':['-','▄','─'],
-            '[[1, -1], [1, -1]]':['│','▌','│'],
-            '[[-1, 1], [-1, 1]]':['│','▐','│'],
+            '[[1, -1], [1, -1]]':['|','▌','│'],
+            '[[-1, 1], [-1, 1]]':['|','▐','│'],
             '[[1, -1], [-1, 1]]':['╲','▚','╲'],
             '[[-1, 1], [1, -1]]':['╱','▞','╱'],
             '[[-1, 1], [1, 1]]':['/','▟','┘'],
@@ -105,7 +105,7 @@ class Framebuffer():
         # set size
         self.sizeX = sizeX
         self.sizeY = sizeY
-        self.aspectRatio = sizeY/sizeX*17/7
+        self.aspectRatio = sizeY/sizeX*32/16
 
         #prepare framebuffer
         self.framebuffer = np.full((self.sizeY, self.sizeX), ' ')  # array with ascii pixels
