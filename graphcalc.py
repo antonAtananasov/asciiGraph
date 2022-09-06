@@ -237,5 +237,5 @@ if __name__ == '__main__':
         plot.setRange(-4,-4,4,4)
         plot.fixAspectRatio()
         plot.drawAxes()
-        plot.plot(eq,plot.charMap['.'])
+        plot.plot()
         plot.render()
