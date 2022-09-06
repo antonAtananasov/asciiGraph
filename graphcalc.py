@@ -33,8 +33,8 @@ class SquareMap():
             '[[-1, -1], [-1, 1]]':['/','▗','╭'],
             '[[1, 1], [-1, -1]]':['-','▀','─'],
             '[[-1, -1], [1, 1]]':['-','▄','─'],
-            '[[1, -1], [1, -1]]':['│','▌','│'],
-            '[[-1, 1], [-1, 1]]':['│','▐','│'],
+            '[[1, -1], [1, -1]]':['|','▌','│'],
+            '[[-1, 1], [-1, 1]]':['|','▐','│'],
             '[[1, -1], [-1, 1]]':['╲','▚','╲'],
             '[[-1, 1], [1, -1]]':['╱','▞','╱'],
             '[[-1, 1], [1, 1]]':['/','▟','┘'],
@@ -43,11 +43,11 @@ class SquareMap():
             '[[1, 1], [1, -1]]':['/','▛','┌']                
             }
         self.charmapFillinVariants = { 
-            '[[1, 1], [1, 1]]':['▓','▓'],
-            '[[0, 0], [0, 0]]': [' ',' '] 
+            '[[1, 1], [1, 1]]':['#','▓','▓'],
+            '[[0, 0], [0, 0]]': [' ',' ',' '] 
             }
         self.charmapFilloutVariants = {
-            '[[-1, -1], [-1, -1]]':['░','░']
+            '[[-1, -1], [-1, -1]]':['#','░','░']
             }
 
         #create group for checking valid marching square 
@@ -105,7 +105,7 @@ class Framebuffer():
         # set size
         self.sizeX = sizeX
         self.sizeY = sizeY
-        self.aspectRatio = sizeY/sizeX*17/7
+        self.aspectRatio = sizeY/sizeX*32/16
 
         #prepare framebuffer
         self.framebuffer = np.full((self.sizeY, self.sizeX), ' ')  # array with ascii pixels
